@@ -7,7 +7,7 @@ int main(){
     float samplerate = 10;
     float phase = 0.0f;
 
-    for (int i = 0; i < 10; ++i){
+    for (int i = 0; i < samplerate; ++i){
         std::cout << "phase is " << phase << " & index is " << i << " \n";
         phase += frequency / samplerate;
 
