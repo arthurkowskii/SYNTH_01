@@ -8,27 +8,23 @@ void create16bit_char(unsigned char* buffer, std::string str){
     buffer[0] = str[0];
     buffer[1] = str[1];
 }
-
 void create32bit_char (unsigned char* buffer, std::string str){
     buffer[0] = str[0];
     buffer[1] = str[1];
     buffer[2] = str[2];
     buffer[3] = str[3];
 }
-
 void create16bit_Int(unsigned char* buffer, uint16_t value){
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
 }
-
 void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
-
-std::vector<unsigned char> wavMaker(int channels, int bits, int sampleRate, uint32_t dataSize, int durationSeconds){
+void wavMaker(int channels, int bits, int sampleRate, uint32_t dataSize){
     std::vector<unsigned char> buffer(44);
     create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
     create32bit_Int(&buffer[4], dataSize + 36); // RIFF chunk size = file size - 8
@@ -49,8 +45,6 @@ std::vector<unsigned char> wavMaker(int channels, int bits, int sampleRate, uint
     outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
     outputWav.write(reinterpret_cast<const char*>(&silence[0]), silence.size());
     outputWav.close();
-
-    return buffer;
 }
 
 int main(){
@@ -61,7 +55,7 @@ int main(){
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
-    wavMaker(channels, bits, samplerate, dataSize, durationSeconds);
+    wavMaker(channels, bits, samplerate, dataSize);
 
     return 0;
 }
