@@ -57,7 +57,7 @@ int main(){
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
     uint16_t bits = 16;
-    uint32_t durationSeconds = 25;
+    uint32_t durationSeconds = 1;
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
