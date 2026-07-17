@@ -3,10 +3,9 @@
 #include <vector>
 #include <cstdint>
 
-
 void create16bit_char(unsigned char* buffer, std::string str){
     buffer[0] = str[0];
-    buffer[1] = str[1];
+    buffer[1] = str[1];z
 }
 void create32bit_char (unsigned char* buffer, std::string str){
     buffer[0] = str[0];
