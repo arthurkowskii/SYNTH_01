@@ -74,14 +74,25 @@ int main(){
     std::cout << "phaseIncrement is " << phaseIncrement << "\n";
     float phase = 0;
 
+    float maxValue = 0;
+    float minValue = 0;
+    int16_t PCMValue;
+
     for (i = 0; i<samplerate; i++){
-        std::cout << "PCM value is : " << floatToPCMConverter(sin(2*PI*phase)) << "\n";
+        int16_t PCMValue = floatToPCMConverter(sin(2*PI*phase));
+        std::cout << "PCM value is : " << PCMValue << "\n";
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
         }
+        if (PCMValue > maxValue){
+            maxValue = PCMValue;
+        }else if (PCMValue < minValue){
+            minValue = PCMValue;
+        }
     }
 
+    std::cout << "min value is : " << minValue << " max value is : " << maxValue << "\n";
     std::vector<unsigned char> silence(dataSize);
     wavMaker(channels, bits, samplerate, silence);
 
