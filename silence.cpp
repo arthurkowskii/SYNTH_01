@@ -26,10 +26,31 @@ void create32bit_Int(unsigned char* buffer, uint32_t value){
 }
 
 int16_t floatToPCMConverter(float sinValue){
-    int16_t sinValuePCM = sinValue * 32767.0f;
-    sinValuePCM = std::round(sinValuePCM);
-    sinValuePCM = static_cast<int16_t>(sinValuePCM);
-    return sinValuePCM;
+    return static_cast<int16_t>(std::round(sinValue * 32767.0f));
+}
+
+void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency){
+    int i;
+    float maxValue = 0;
+    float minValue = 0;
+    int16_t PCMValue;
+    float phaseIncrement = frequency / static_cast<float>(samplerate);
+    float phase = 0;
+    const float PI = 3.14159265358979323846;
+
+    for (i = 0; i<silence.size(); i+=2){
+        int16_t PCMValue = floatToPCMConverter(sin(2*PI*phase));
+        create16bit_Int(&silence[i], PCMValue);
+        phase += phaseIncrement;
+        if (phase >= 1.0f){
+            phase -= 1.0f;
+        }
+        if (PCMValue > maxValue){
+            maxValue = PCMValue;
+        }else if (PCMValue < minValue){
+            minValue = PCMValue;
+        }
+    }
 }
 
 void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& silence){
@@ -69,32 +90,13 @@ int main(){
     uint32_t durationSeconds = 1;
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
-    const float PI = 3.14;
     float phaseIncrement = frequency / static_cast<float>(samplerate);
-    std::cout << "phaseIncrement is " << phaseIncrement << "\n";
     float phase = 0;
 
-    float maxValue = 0;
-    float minValue = 0;
-    int16_t PCMValue;
-
-    for (i = 0; i<samplerate; i++){
-        int16_t PCMValue = floatToPCMConverter(sin(2*PI*phase));
-        std::cout << "PCM value is : " << PCMValue << "\n";
-        phase += phaseIncrement;
-        if (phase >= 1.0f){
-            phase -= 1.0f;
-        }
-        if (PCMValue > maxValue){
-            maxValue = PCMValue;
-        }else if (PCMValue < minValue){
-            minValue = PCMValue;
-        }
-    }
-
-    std::cout << "min value is : " << minValue << " max value is : " << maxValue << "\n";
     std::vector<unsigned char> silence(dataSize);
+    writingSin(samplerate, silence, frequency);
     wavMaker(channels, bits, samplerate, silence);
+
 
 
     return 0;
