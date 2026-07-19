@@ -23,7 +23,8 @@ void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
-void wavMaker(int channels, int bits, int sampleRate, uint32_t dataSize, std::vector<unsigned char>& silence){
+void wavMaker(int channels, int bits, int sampleRate, std::vector<unsigned char>& silence){
+    uint32_t dataSize = silence.size();
     create32bit_char(&silence[0], "RIFF"); // RIFF HEADER
     create32bit_Int(&silence[4], dataSize + 36); // RIFF chunk size = file size - 8
     create32bit_char(&silence[8], "WAVE"); // FORMAT
@@ -53,7 +54,7 @@ int main(){
 
     std::vector<unsigned char> silence(dataSize);
 
-    wavMaker(channels, bits, samplerate, dataSize, silence);
+    wavMaker(channels, bits, samplerate, silence);
 
     return 0;
 }
