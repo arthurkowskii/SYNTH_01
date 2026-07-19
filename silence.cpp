@@ -23,25 +23,22 @@ void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
-void wavMaker(int channels, int bits, int sampleRate, uint32_t dataSize){
-    std::vector<unsigned char> buffer(44);
-    create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
-    create32bit_Int(&buffer[4], dataSize + 36); // RIFF chunk size = file size - 8
-    create32bit_char(&buffer[8], "WAVE"); // FORMAT
-    create32bit_char(&buffer[12], "fmt "); // Subchunk1 ID
-    create32bit_Int(&buffer[16], 16); // Subchunk 1 Size
-    create16bit_Int(&buffer[20], 1); // Audio format : PCM lossless
-    create16bit_Int(&buffer[22], channels); // CHANNELS
-    create32bit_Int(&buffer[24], sampleRate); // SAMPLE RATE
-    create32bit_Int(&buffer[28], sampleRate * channels * (bits / 8)); // BYTE RATE
-    create16bit_Int(&buffer[32], channels * bits / 8); // BLOCK ALIGNMENT
-    create16bit_Int(&buffer[34], bits); // BITS PER SAMPLE
-    create32bit_char(&buffer[36], "data"); // Subchunk 2 ID (DATA)
-    create32bit_Int(&buffer[40], dataSize); // Subchunk 2 Size (DATA SIZE)
+void wavMaker(int channels, int bits, int sampleRate, uint32_t dataSize, std::vector<unsigned char>& silence){
+    create32bit_char(&silence[0], "RIFF"); // RIFF HEADER
+    create32bit_Int(&silence[4], dataSize + 36); // RIFF chunk size = file size - 8
+    create32bit_char(&silence[8], "WAVE"); // FORMAT
+    create32bit_char(&silence[12], "fmt "); // Subchunk1 ID
+    create32bit_Int(&silence[16], 16); // Subchunk 1 Size
+    create16bit_Int(&silence[20], 1); // Audio format : PCM lossless
+    create16bit_Int(&silence[22], channels); // CHANNELS
+    create32bit_Int(&silence[24], sampleRate); // SAMPLE RATE
+    create32bit_Int(&silence[28], sampleRate * channels * (bits / 8)); // BYTE RATE
+    create16bit_Int(&silence[32], channels * bits / 8); // BLOCK ALIGNMENT
+    create16bit_Int(&silence[34], bits); // BITS PER SAMPLE
+    create32bit_char(&silence[36], "data"); // Subchunk 2 ID (DATA)
+    create32bit_Int(&silence[40], dataSize); // Subchunk 2 Size (DATA SIZE)
 
-    std::vector<unsigned char> silence(dataSize);
     std::ofstream outputWav("silence.wav", std::ios::binary);
-    outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
     outputWav.write(reinterpret_cast<const char*>(&silence[0]), silence.size());
     outputWav.close();
 }
@@ -54,7 +51,9 @@ int main(){
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
-    wavMaker(channels, bits, samplerate, dataSize);
+    std::vector<unsigned char> silence(dataSize);
+
+    wavMaker(channels, bits, samplerate, dataSize, silence);
 
     return 0;
 }
