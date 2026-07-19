@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <cmath>
 
 void create16bit_char(unsigned char* buffer, std::string str){
     buffer[0] = str[0];
@@ -23,6 +24,14 @@ void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
+
+int16_t floatToPCMConverter(float sinValue){
+    int16_t sinValuePCM = sinValue * 32767.0f;
+    sinValuePCM = std::round(sinValuePCM);
+    sinValuePCM = static_cast<int16_t>(sinValuePCM);
+    return sinValuePCM;
+}
+
 void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& silence){
     std::vector<unsigned char> buffer(44);
     uint32_t dataSize = silence.size();
@@ -52,16 +61,30 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 }
 
 int main(){
+    int frequency = 440;
+    int i;
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
     uint16_t bits = 16;
     uint32_t durationSeconds = 1;
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
+    const float PI = 3.14;
+    float phaseIncrement = frequency / static_cast<float>(samplerate);
+    std::cout << "phaseIncrement is " << phaseIncrement << "\n";
+    float phase = 0;
+
+    for (i = 0; i<samplerate; i++){
+        std::cout << "PCM value is : " << floatToPCMConverter(sin(2*PI*phase)) << "\n";
+        phase += phaseIncrement;
+        if (phase >= 1.0f){
+            phase -= 1.0f;
+        }
+    }
 
     std::vector<unsigned char> silence(dataSize);
-
     wavMaker(channels, bits, samplerate, silence);
+
 
     return 0;
 }
