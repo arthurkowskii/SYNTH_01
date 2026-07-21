@@ -70,12 +70,11 @@ void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& silence, flo
 
     for (i=0; i<silence.size(); i+=bytesPerSample){
         if (phase >=0.5){
-            squareValue = 1;
-        }else{
             squareValue = -1;
+        }else{
+            squareValue = 1;
         }
         PCMValue = floatToPCMConverter(squareValue, bits);
-        std::cout << PCMValue << " \n";
         writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
         phase += phaseIncrement;
         if (phase >= 1.0f){
@@ -91,20 +90,26 @@ void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& silence, f
     unsigned int i = 0;
     float PCMValue = floatToPCMConverter(triangleValue, bits);
 
-    for (i=0; i<silence.size(); i+=bytesPerSample){
-        if (phase >=0.5){
-            squareValue = 1;
-        }else{
-            squareValue = -1;
+    for (i=0; i<silence.size();i+=bytesPerSample)
+    {
+        if (phase <0.5){
+            triangleValue = -1.0f + 4.0f * phase;
+            PCMValue = floatToPCMConverter(triangleValue, bits);
+            writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
+
+        }else {
+            triangleValue = 3.0f - 4.0f * phase;
+            PCMValue = floatToPCMConverter(triangleValue, bits);
+            writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
         }
-        PCMValue = floatToPCMConverter(squareValue, bits);
-        std::cout << PCMValue << " \n";
-        writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
         }
     }
+
+
+
 }
 void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){
     std::vector<unsigned char> buffer(44);
@@ -136,7 +141,7 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 
 int main(){
     int frequency = 440;
-    uint32_t samplerate = 44100;
+    uint32_t samplerate = 48000;
     uint16_t channels = 1;
     uint16_t bits = 16;
     uint32_t durationSeconds = 2;
@@ -144,7 +149,7 @@ int main(){
     uint32_t dataSize = frames * channels * (bits / 8);
 
     std::vector<unsigned char> audioData(dataSize);
-    writingSquare(samplerate, audioData, frequency, bits);
+    writingTriangle(samplerate, audioData, frequency, bits);
     wavMaker(channels, bits, samplerate, audioData);
 
     return 0;
