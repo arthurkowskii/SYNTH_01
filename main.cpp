@@ -5,38 +5,38 @@
 #include <cmath>
 #include <stdexcept>
 
-void create16bit_char(unsigned char* buffer, std::string str){
+void create16bit_char(unsigned char* buffer, std::string str){ // little endian 16bits char writing
     buffer[0] = str[0];
     buffer[1] = str[1];
 }
 
-void create32bit_char (unsigned char* buffer, std::string str){
+void create32bit_char (unsigned char* buffer, std::string str){ // little endian 32bits char writing
     buffer[0] = str[0];
     buffer[1] = str[1];
     buffer[2] = str[2];
     buffer[3] = str[3];
 }
 
-void create16bit_Int(unsigned char* buffer, uint16_t value){
+void create16bit_Int(unsigned char* buffer, uint16_t value){ // little endian 16bits int writing
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
 }
 
-void create32bit_Int(unsigned char* buffer, uint32_t value){
+void create32bit_Int(unsigned char* buffer, uint32_t value){ // little endian 32bits int writing
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
 
-void writingBits(unsigned char* buffer, uint32_t pcmValue, unsigned bits){
+void writingBits(unsigned char* buffer, uint32_t pcmValue, unsigned bits){ // this is writing the sin, sqr or tri value into the file, after the header
     const unsigned bytes = bits / 8;
     for (unsigned i = 0; i < bytes; ++i){
         buffer[i] = static_cast<unsigned char>((pcmValue >> (i * 8)) & 0xFF);
     }
 }
 
-int32_t floatToPCMConverter(float sinValue, unsigned bits){
+int32_t floatToPCMConverter(float sinValue, unsigned bits){ // this is converting the calculated float value of each wave (tri, sqr, sin) into PCM values which is required to write with writingBits()
     if (bits == 8){
         int value = static_cast<int>(std::round(sinValue * 127.0f)) + 128;
         if (value < 0)  value = 0;
@@ -47,7 +47,7 @@ int32_t floatToPCMConverter(float sinValue, unsigned bits){
     return static_cast<int32_t>(std::round(sinValue * maxValue));
 }
 
-void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
+void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a sinusoid value at audioData which is the main wave array address
     if (bits != 8 && bits != 16 && bits != 32){
         throw std::invalid_argument("Only 8-bit, 16-bit and 32-bit audio are supported");
     }
@@ -67,7 +67,7 @@ void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, floa
     }
 }
 
-void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
+void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a square value at audioData which is the main wave array address
     const size_t bytesPerSample = bits / 8;
     const float phaseIncrement = frequency / sampleRate;
     float phase = 0;
@@ -90,7 +90,7 @@ void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, f
     }
 }
 
-void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
+void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a triangle value at audioData which is the main wave array address
     const size_t bytesPerSample = bits / 8;
     const float phaseIncrement = frequency / sampleRate;
     float phase = 0;
@@ -117,7 +117,7 @@ void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData,
     }
 }
 
-void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){
+void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){ // this is creating the WAV header
     std::vector<unsigned char> buffer(44);
     uint32_t dataSize = audioData.size();
     create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
