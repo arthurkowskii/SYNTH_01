@@ -1,9 +1,9 @@
 [
   {
     "label": "Compile and run current C++ file",
-    "command": "g++ -std=c++17 \"$ZED_FILE\" -o \"compOut/$ZED_STEM\" && \"./compOut/$ZED_STEM\"",
+    "command": "g++ -std=c++17 -Wall -Wextra -Wpedantic \"$ZED_FILE\" -o \"compOut/$ZED_STEM\" && \"./compOut/$ZED_STEM\"",
     "shell": {
-      "program": "sh"
+      "program": "C:\\msys64\\usr\\bin\\sh.exe"
     },
     "save": "current",
     "use_new_terminal": false,

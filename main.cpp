@@ -30,7 +30,7 @@ int16_t floatToPCMConverter(float sinValue){
 }
 
 void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency){
-    int i;
+    int i = 0;
     float maxValue = 0;
     float minValue = 0;
     int16_t PCMValue;
@@ -39,7 +39,7 @@ void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float 
     const float PI = 3.14159265358979323846;
 
     for (i = 0; i<silence.size(); i+=2){
-        int16_t PCMValue = floatToPCMConverter(sin(2*PI*phase));
+        PCMValue = floatToPCMConverter(sin(2*PI*phase));
         create16bit_Int(&silence[i], PCMValue);
         phase += phaseIncrement;
         if (phase >= 1.0f){
@@ -83,15 +83,12 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 
 int main(){
     int frequency = 1200;
-    int i;
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
     uint16_t bits = 16;
     uint32_t durationSeconds = 1;
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
-    float phaseIncrement = frequency / static_cast<float>(samplerate);
-    float phase = 0;
 
     std::vector<unsigned char> silence(dataSize);
     writingSin(samplerate, silence, frequency);
