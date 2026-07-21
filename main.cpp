@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint>
 #include <cmath>
+#include <stdexcept>
 
 void create16bit_char(unsigned char* buffer, std::string str){
     buffer[0] = str[0];
@@ -25,30 +26,40 @@ void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
 
-int16_t floatToPCMConverter(float sinValue){
-    return static_cast<int16_t>(std::round(sinValue * 32767.0f));
+void writingBits(unsigned char* buffer, uint32_t pcmValue, unsigned bits){
+    const unsigned bytes = bits / 8;
+    for (unsigned i = 0; i < bytes; ++i){
+        buffer[i] = static_cast<unsigned char>((pcmValue >> (i * 8)) & 0xFF);
+    }
 }
 
-void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency){
-    unsigned int i = 0;
-    float maxValue = 0;
-    float minValue = 0;
-    int16_t PCMValue;
-    float phaseIncrement = frequency / static_cast<float>(samplerate);
-    float phase = 0;
-    const float PI = 3.14159265358979323846;
+int32_t floatToPCMConverter(float sinValue, unsigned bits){
+    if (bits == 8){
+        int value = static_cast<int>(std::round(sinValue * 127.0f)) + 128;
+        if (value < 0)  value = 0;
+        if (value > 255) value = 255;
+        return value;
+    }
+    const int64_t maxValue = (int64_t{1} << (bits - 1)) - 1;
+    return static_cast<int32_t>(std::round(sinValue * maxValue));
+}
 
-    for (i = 0; i<silence.size(); i+=2){
-        PCMValue = floatToPCMConverter(sin(2*PI*phase));
-        create16bit_Int(&silence[i], PCMValue);
+void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency, unsigned bits){
+    if (bits != 8 && bits != 16 && bits != 32){
+        throw std::invalid_argument("Only 8-bit, 16-bit and 32-bit audio are supported");
+    }
+
+    const size_t bytesPerSample = bits / 8;
+    const float phaseIncrement = frequency / static_cast<float>(samplerate);
+    float phase = 0.0f;
+    constexpr float PI = 3.14159265358979323846f;
+
+    for (size_t i = 0; i + bytesPerSample <= silence.size(); i += bytesPerSample){
+        int32_t pcmValue = floatToPCMConverter(std::sin(2.0f * PI * phase), bits);
+        writingBits(&silence[i], static_cast<uint32_t>(pcmValue), bits);
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
-        }
-        if (PCMValue > maxValue){
-            maxValue = PCMValue;
-        }else if (PCMValue < minValue){
-            minValue = PCMValue;
         }
     }
 }
@@ -82,7 +93,7 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 }
 
 int main(){
-    int frequency = 1200;
+    int frequency = 250;
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
     uint16_t bits = 16;
@@ -91,7 +102,7 @@ int main(){
     uint32_t dataSize = frames * channels * (bits / 8);
 
     std::vector<unsigned char> audioData(dataSize);
-    writingSin(samplerate, audioData, frequency);
+    writingSin(samplerate, audioData, frequency, bits);
     wavMaker(channels, bits, samplerate, audioData);
 
     return 0;
