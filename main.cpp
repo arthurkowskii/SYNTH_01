@@ -9,28 +9,33 @@ void create16bit_char(unsigned char* buffer, std::string str){
     buffer[0] = str[0];
     buffer[1] = str[1];
 }
+
 void create32bit_char (unsigned char* buffer, std::string str){
     buffer[0] = str[0];
     buffer[1] = str[1];
     buffer[2] = str[2];
     buffer[3] = str[3];
 }
+
 void create16bit_Int(unsigned char* buffer, uint16_t value){
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
 }
+
 void create32bit_Int(unsigned char* buffer, uint32_t value){
     buffer[0] = static_cast<unsigned char>(value & 0xFF);
     buffer[1] = static_cast<unsigned char>((value >> 8) & 0xFF);
     buffer[2] = static_cast<unsigned char>((value >> 16) & 0xFF);
     buffer[3] = static_cast<unsigned char>((value >> 24) & 0xFF);
 }
+
 void writingBits(unsigned char* buffer, uint32_t pcmValue, unsigned bits){
     const unsigned bytes = bits / 8;
     for (unsigned i = 0; i < bytes; ++i){
         buffer[i] = static_cast<unsigned char>((pcmValue >> (i * 8)) & 0xFF);
     }
 }
+
 int32_t floatToPCMConverter(float sinValue, unsigned bits){
     if (bits == 8){
         int value = static_cast<int>(std::round(sinValue * 127.0f)) + 128;
@@ -41,7 +46,8 @@ int32_t floatToPCMConverter(float sinValue, unsigned bits){
     const int64_t maxValue = (int64_t{1} << (bits - 1)) - 1;
     return static_cast<int32_t>(std::round(sinValue * maxValue));
 }
-void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency, unsigned bits){
+
+void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
     if (bits != 8 && bits != 16 && bits != 32){
         throw std::invalid_argument("Only 8-bit, 16-bit and 32-bit audio are supported");
     }
@@ -51,16 +57,17 @@ void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float 
     float phase = 0.0f;
     constexpr float PI = 3.14159265358979323846f;
 
-    for (size_t i = 0; i + bytesPerSample <= silence.size(); i += bytesPerSample){
+    for (size_t i = 0; i + bytesPerSample <= audioData.size(); i += bytesPerSample){
         int32_t pcmValue = floatToPCMConverter(std::sin(2.0f * PI * phase), bits);
-        writingBits(&silence[i], static_cast<uint32_t>(pcmValue), bits);
+        writingBits(&audioData[i], static_cast<uint32_t>(pcmValue), bits);
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
         }
     }
 }
-void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& silence, float frequency, unsigned bits){
+
+void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
     const size_t bytesPerSample = bits / 8;
     const float phaseIncrement = frequency / sampleRate;
     float phase = 0;
@@ -68,21 +75,22 @@ void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& silence, flo
     unsigned int i = 0;
     float PCMValue = floatToPCMConverter(squareValue, bits);
 
-    for (i=0; i<silence.size(); i+=bytesPerSample){
+    for (i=0; i<audioData.size(); i+=bytesPerSample){
         if (phase >=0.5){
             squareValue = -1;
         }else{
             squareValue = 1;
         }
         PCMValue = floatToPCMConverter(squareValue, bits);
-        writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
+        writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
         }
     }
 }
-void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& silence, float frequency, unsigned bits){
+
+void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){
     const size_t bytesPerSample = bits / 8;
     const float phaseIncrement = frequency / sampleRate;
     float phase = 0;
@@ -90,27 +98,25 @@ void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& silence, f
     unsigned int i = 0;
     float PCMValue = floatToPCMConverter(triangleValue, bits);
 
-    for (i=0; i<silence.size();i+=bytesPerSample)
+    for (i=0; i<audioData.size();i+=bytesPerSample)
     {
         if (phase <0.5){
             triangleValue = -1.0f + 4.0f * phase;
             PCMValue = floatToPCMConverter(triangleValue, bits);
-            writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
+            writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
 
         }else {
             triangleValue = 3.0f - 4.0f * phase;
             PCMValue = floatToPCMConverter(triangleValue, bits);
-            writingBits(&silence[i], static_cast<uint32_t>(PCMValue), bits);
+            writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
         }
         phase += phaseIncrement;
         if (phase >= 1.0f){
             phase -= 1.0f;
         }
     }
-
-
-
 }
+
 void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){
     std::vector<unsigned char> buffer(44);
     uint32_t dataSize = audioData.size();
@@ -130,12 +136,12 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 
     std::cout << "Successfully created the header \n";
 
-    std::ofstream outputWav("silence.wav", std::ios::binary);
+    std::ofstream outputWav("audioData.wav", std::ios::binary);
     std::cout << "Empty wav file created \n";
     outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
     std::cout << "Header written on the wav \n";
     outputWav.write(reinterpret_cast<const char*>(&audioData[0]), dataSize);
-    std::cout << "Silence written on the wav \n";
+    std::cout << "audioData written on the wav \n";
     outputWav.close();
 }
 
