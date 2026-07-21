@@ -53,9 +53,9 @@ void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float 
     }
 }
 
-void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& silence){
+void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){
     std::vector<unsigned char> buffer(44);
-    uint32_t dataSize = silence.size();
+    uint32_t dataSize = audioData.size();
     create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
     create32bit_Int(&buffer[4], dataSize + 36); // RIFF chunk size = file size - 8
     create32bit_char(&buffer[8], "WAVE"); // FORMAT
@@ -76,7 +76,7 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
     std::cout << "Empty wav file created \n";
     outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
     std::cout << "Header written on the wav \n";
-    outputWav.write(reinterpret_cast<const char*>(&silence[0]), dataSize);
+    outputWav.write(reinterpret_cast<const char*>(&audioData[0]), dataSize);
     std::cout << "Silence written on the wav \n";
     outputWav.close();
 }
@@ -86,13 +86,13 @@ int main(){
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
     uint16_t bits = 16;
-    uint32_t durationSeconds = 1;
+    uint32_t durationSeconds = 2;
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
-    std::vector<unsigned char> silence(dataSize);
-    writingSin(samplerate, silence, frequency);
-    wavMaker(channels, bits, samplerate, silence);
+    std::vector<unsigned char> audioData(dataSize);
+    writingSin(samplerate, audioData, frequency);
+    wavMaker(channels, bits, samplerate, audioData);
 
     return 0;
 }
