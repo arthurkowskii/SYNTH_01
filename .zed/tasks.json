@@ -1,0 +1,14 @@
+[
+  {
+    "label": "Compile and run current C++ file",
+    "command": "g++ -std=c++17 \"$ZED_FILE\" -o \"compOut/$ZED_STEM\" && \"./compOut/$ZED_STEM\"",
+    "shell": {
+      "program": "sh"
+    },
+    "save": "current",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "never"
+  }
+]

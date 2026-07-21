@@ -82,7 +82,7 @@ void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned
 }
 
 int main(){
-    int frequency = 440;
+    int frequency = 1200;
     int i;
     uint32_t samplerate = 44100;
     uint16_t channels = 1;
@@ -96,8 +96,6 @@ int main(){
     std::vector<unsigned char> silence(dataSize);
     writingSin(samplerate, silence, frequency);
     wavMaker(channels, bits, samplerate, silence);
-
-
 
     return 0;
 }
