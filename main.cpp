@@ -30,7 +30,7 @@ int16_t floatToPCMConverter(float sinValue){
 }
 
 void writingSin(uint32_t samplerate, std::vector<unsigned char>& silence, float frequency){
-    int i = 0;
+    unsigned int i = 0;
     float maxValue = 0;
     float minValue = 0;
     int16_t PCMValue;
