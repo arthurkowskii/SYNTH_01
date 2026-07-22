@@ -42,15 +42,17 @@ void writingBits(unsigned char* buffer, uint32_t pcmValue, unsigned bits){ // th
     }
 }
 
-int32_t floatToPCMConverter(float sinValue, unsigned bits){ // this is converting the calculated float value of each wave (tri, sqr, sin) into PCM values which is required to write with writingBits()
+int32_t floatToPCMConverter(float waveValue, unsigned bits){ // this is converting the calculated float value of each wave (tri, sqr, sin) into PCM values which is required to write with writingBits()
+    if (waveValue > 1.0f) waveValue = 1.0f;
+    if (waveValue < -1.0f) waveValue = -1.0f;
     if (bits == 8){
-        int value = static_cast<int>(std::round(sinValue * 127.0f)) + 128;
+        int value = static_cast<int>(std::round(waveValue * 127.0f)) + 128;
         if (value < 0)  value = 0;
         if (value > 255) value = 255;
         return value;
     }
     const int64_t maxValue = (int64_t{1} << (bits - 1)) - 1;
-    return static_cast<int32_t>(std::round(sinValue * maxValue));
+    return static_cast<int32_t>(std::round(waveValue * maxValue));
 }
 
 
@@ -68,8 +70,6 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
         case waveShape::SINE:
             for (i = 0; i < audioData.size(); i+= bytesPerSample){
                 waveValue = gain * (sin(2 * pi * phase));
-                if (waveValue > 1.0f) waveValue = 1.0f;
-                if (waveValue < -1.0f) waveValue = -1.0f;
                 PCMValue = floatToPCMConverter(waveValue, bits);
                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
                 phase += phaseIncrement;
@@ -81,8 +81,6 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
         case waveShape::SQUARE:
             for (i = 0; i < audioData.size(); i+= bytesPerSample){
                 waveValue = gain * ((phase < 0.5f) ? 1.0f : -1.0f);
-                if (waveValue > 1.0f) waveValue = 1.0f;
-                if (waveValue < -1.0f) waveValue = -1.0f;
                 PCMValue = floatToPCMConverter(waveValue, bits);
                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
                 phase += phaseIncrement;
@@ -94,8 +92,6 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
         case waveShape::TRIANGLE:
             for (i = 0; i < audioData.size(); i+= bytesPerSample){
                 waveValue = gain * (1.0f - 4.0f * fabs(phase - 0.5f));
-                if (waveValue > 1.0f) waveValue = 1.0f;
-                if (waveValue < -1.0f) waveValue = -1.0f;
                 PCMValue = floatToPCMConverter(waveValue, bits);
                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
                 phase += phaseIncrement;
