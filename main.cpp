@@ -8,7 +8,8 @@
 enum waveShape {
     SINE,
     SQUARE,
-    TRIANGLE
+    TRIANGLE,
+    SAWTOOTH
 };
 
 void create16bit_char(unsigned char* buffer, std::string str){ // little endian 16bits char writing
@@ -100,6 +101,17 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
                 }
             }
             break;
+        case waveShape::SAWTOOTH:
+            for (i=0; i < audioData.size(); i += bytesPerSample){
+                 waveValue = gain * (2.0f * phase - 1.0f);
+                 PCMValue = floatToPCMConverter(waveValue, bits);
+                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+                 phase += phaseIncrement;
+                 if (phase >= 1.0f){
+                    phase -= 1.0f;
+                 }
+            }
+        break;
     }
 }
 
@@ -141,7 +153,7 @@ int main(){
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
-    waveShape main = TRIANGLE;
+    waveShape main = SAWTOOTH;
     std::vector<unsigned char> audioData(dataSize);
     writeWaveform(samplerate, audioData, frequency, bits, main, gain);
     wavMaker(channels, bits, samplerate, audioData);
