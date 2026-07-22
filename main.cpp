@@ -89,7 +89,7 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
             break;
         case waveShape::TRIANGLE:
             for (i = 0; i < audioData.size(); i+= bytesPerSample){
-                waveValue = 2.0f * fabs(phase - 0.5f) - 1.0f;
+                waveValue = 1.0f - 4.0f * fabs(phase - 0.5f);
                 PCMValue = floatToPCMConverter(waveValue, bits);
                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
                 phase += phaseIncrement;
@@ -138,7 +138,7 @@ int main(){
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
-    waveShape main = SQUARE;
+    waveShape main = TRIANGLE;
     std::vector<unsigned char> audioData(dataSize);
     writeWaveform(samplerate, audioData, frequency, bits, main);
     wavMaker(channels, bits, samplerate, audioData);
