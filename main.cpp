@@ -55,7 +55,7 @@ int32_t floatToPCMConverter(float sinValue, unsigned bits){ // this is convertin
 
 
 void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits, waveShape waveShape){
-    const float M_PI = 3.14159265358979323846;
+    const float pi = 3.14159265358979323846;
     const size_t bytesPerSample = bits / 8;
     const float phaseIncrement = frequency / samplerate;
     float phase = 0;
@@ -67,7 +67,7 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
     switch (waveShape) {
         case waveShape::SINE:
             for (i = 0; i < audioData.size(); i+= bytesPerSample){
-                waveValue = sin(2 * M_PI * phase);
+                waveValue = sin(2 * pi * phase);
                 PCMValue = floatToPCMConverter(waveValue, bits);
                 writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
                 phase += phaseIncrement;
