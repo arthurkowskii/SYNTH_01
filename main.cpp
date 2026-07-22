@@ -5,6 +5,12 @@
 #include <cmath>
 #include <stdexcept>
 
+enum waveShape {
+    SINE,
+    SQUARE,
+    TRIANGLE
+};
+
 void create16bit_char(unsigned char* buffer, std::string str){ // little endian 16bits char writing
     buffer[0] = str[0];
     buffer[1] = str[1];
@@ -47,73 +53,117 @@ int32_t floatToPCMConverter(float sinValue, unsigned bits){ // this is convertin
     return static_cast<int32_t>(std::round(sinValue * maxValue));
 }
 
-void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a sinusoid value at audioData which is the main wave array address
-    if (bits != 8 && bits != 16 && bits != 32){
-        throw std::invalid_argument("Only 8-bit, 16-bit and 32-bit audio are supported");
-    }
+// void writingSin(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a sinusoid value at audioData which is the main wave array address
+//     const size_t bytesPerSample = bits / 8;
+//     const float phaseIncrement = frequency / static_cast<float>(samplerate);
+//     float phase = 0.0f;
+//     constexpr float PI = 3.14159265358979323846f;
 
+//     for (size_t i = 0; i + bytesPerSample <= audioData.size(); i += bytesPerSample){
+//         int32_t pcmValue = floatToPCMConverter(std::sin(2.0f * PI * phase), bits);
+//         writingBits(&audioData[i], static_cast<uint32_t>(pcmValue), bits);
+//         phase += phaseIncrement;
+//         if (phase >= 1.0f){
+//             phase -= 1.0f;
+//         }
+//     }
+// }
+
+// void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a square value at audioData which is the main wave array address
+//     const size_t bytesPerSample = bits / 8;
+//     const float phaseIncrement = frequency / sampleRate;
+//     float phase = 0;
+//     float waveValue = -1;
+//     unsigned int i = 0;
+//     float PCMValue = floatToPCMConverter(waveValue, bits);
+
+//     for (i=0; i<audioData.size(); i+=bytesPerSample){
+//         if (phase >=0.5){
+//             waveValue = -1;
+//         }else{
+//             waveValue = 1;
+//         }
+//         PCMValue = floatToPCMConverter(waveValue, bits);
+//         writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+//         phase += phaseIncrement;
+//         if (phase >= 1.0f){
+//             phase -= 1.0f;
+//         }
+//     }
+// }
+
+// void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a triangle value at audioData which is the main wave array address
+//     const size_t bytesPerSample = bits / 8;
+//     const float phaseIncrement = frequency / sampleRate;
+//     float phase = 0;
+//     float waveValue = -1;
+//     unsigned int i = 0;
+//     float PCMValue = floatToPCMConverter(waveValue, bits);
+
+//     for (i=0; i<audioData.size();i+=bytesPerSample)
+//     {
+//         if (phase <0.5){
+//             waveValue = -1.0f + 4.0f * phase;
+//             PCMValue = floatToPCMConverter(waveValue, bits);
+//             writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+
+//         }else {
+//             waveValue = 3.0f - 4.0f * phase;
+//             PCMValue = floatToPCMConverter(waveValue, bits);
+//             writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+//         }
+//         phase += phaseIncrement;
+//         if (phase >= 1.0f){
+//             phase -= 1.0f;
+//         }
+//     }
+// }
+
+
+void writingWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits, waveShape waveShape){
+    const float M_PI = 3.14159265358979323846;
     const size_t bytesPerSample = bits / 8;
-    const float phaseIncrement = frequency / static_cast<float>(samplerate);
-    float phase = 0.0f;
-    constexpr float PI = 3.14159265358979323846f;
-
-    for (size_t i = 0; i + bytesPerSample <= audioData.size(); i += bytesPerSample){
-        int32_t pcmValue = floatToPCMConverter(std::sin(2.0f * PI * phase), bits);
-        writingBits(&audioData[i], static_cast<uint32_t>(pcmValue), bits);
-        phase += phaseIncrement;
-        if (phase >= 1.0f){
-            phase -= 1.0f;
-        }
-    }
-}
-
-void writingSquare(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a square value at audioData which is the main wave array address
-    const size_t bytesPerSample = bits / 8;
-    const float phaseIncrement = frequency / sampleRate;
+    const float phaseIncrement = frequency / samplerate;
     float phase = 0;
-    float squareValue = -1;
-    unsigned int i = 0;
-    float PCMValue = floatToPCMConverter(squareValue, bits);
+    unsigned int i;
+    float PCMValue;
 
-    for (i=0; i<audioData.size(); i+=bytesPerSample){
-        if (phase >=0.5){
-            squareValue = -1;
-        }else{
-            squareValue = 1;
-        }
-        PCMValue = floatToPCMConverter(squareValue, bits);
-        writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
-        phase += phaseIncrement;
-        if (phase >= 1.0f){
-            phase -= 1.0f;
-        }
-    }
-}
+    float waveValue; // is determined in the switch case
 
-void writingTriangle(uint32_t sampleRate, std::vector<unsigned char>& audioData, float frequency, unsigned bits){ // writing a triangle value at audioData which is the main wave array address
-    const size_t bytesPerSample = bits / 8;
-    const float phaseIncrement = frequency / sampleRate;
-    float phase = 0;
-    float triangleValue = -1;
-    unsigned int i = 0;
-    float PCMValue = floatToPCMConverter(triangleValue, bits);
-
-    for (i=0; i<audioData.size();i+=bytesPerSample)
-    {
-        if (phase <0.5){
-            triangleValue = -1.0f + 4.0f * phase;
-            PCMValue = floatToPCMConverter(triangleValue, bits);
-            writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
-
-        }else {
-            triangleValue = 3.0f - 4.0f * phase;
-            PCMValue = floatToPCMConverter(triangleValue, bits);
-            writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
-        }
-        phase += phaseIncrement;
-        if (phase >= 1.0f){
-            phase -= 1.0f;
-        }
+    switch (waveShape) {
+        case waveShape::SINE:
+            for (i = 0; i < audioData.size(); i+= bytesPerSample){
+                waveValue = sin(2 * M_PI * phase);
+                PCMValue = floatToPCMConverter(waveValue, bits);
+                writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+                phase += phaseIncrement;
+                if (phase >= 1.0f){
+                    phase -= 1.0f;
+                }
+            }
+            break;
+        case waveShape::SQUARE:
+            for (i = 0; i < audioData.size(); i+= bytesPerSample){
+                waveValue = (phase < 0.5f) ? 1.0f : -1.0f;
+                PCMValue = floatToPCMConverter(waveValue, bits);
+                writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+                phase += phaseIncrement;
+                if (phase >= 1.0f){
+                    phase -= 1.0f;
+                }
+            }
+            break;
+        case waveShape::TRIANGLE:
+            for (i = 0; i < audioData.size(); i+= bytesPerSample){
+                waveValue = 2.0f * fabs(phase - 0.5f) - 1.0f;
+                PCMValue = floatToPCMConverter(waveValue, bits);
+                writingBits(&audioData[i], static_cast<uint32_t>(PCMValue), bits);
+                phase += phaseIncrement;
+                if (phase >= 1.0f){
+                    phase -= 1.0f;
+                }
+            }
+            break;
     }
 }
 
@@ -154,8 +204,9 @@ int main(){
     uint32_t frames = durationSeconds * samplerate;
     uint32_t dataSize = frames * channels * (bits / 8);
 
+    waveShape main = SQUARE;
     std::vector<unsigned char> audioData(dataSize);
-    writingTriangle(samplerate, audioData, frequency, bits);
+    writingWaveform(samplerate, audioData, frequency, bits, main);
     wavMaker(channels, bits, samplerate, audioData);
 
     return 0;
