@@ -12,6 +12,17 @@ enum waveShape {
     SAWTOOTH
 };
 
+enum octaveInput {
+    OCTAVE_1,
+    OCTAVE_2,
+    OCTAVE_3,
+    OCTAVE_4,
+    OCTAVE_5,
+    OCTAVE_6,
+    OCTAVE_7,
+    OCTAVE_8,
+};
+
 void create16bit_char(unsigned char* buffer, std::string str){ // little endian 16bits char writing
     buffer[0] = str[0];
     buffer[1] = str[1];
@@ -56,6 +67,33 @@ int32_t floatToPCMConverter(float waveValue, unsigned bits){ // this is converti
     return static_cast<int32_t>(std::round(waveValue * maxValue));
 }
 
+void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){ // this is creating the WAV header
+    std::vector<unsigned char> buffer(44);
+    uint32_t dataSize = audioData.size();
+    create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
+    create32bit_Int(&buffer[4], dataSize + 36); // RIFF chunk size = file size - 8
+    create32bit_char(&buffer[8], "WAVE"); // FORMAT
+    create32bit_char(&buffer[12], "fmt "); // Subchunk1 ID
+    create32bit_Int(&buffer[16], 16); // Subchunk 1 Size
+    create16bit_Int(&buffer[20], 1); // Audio format : PCM lossless
+    create16bit_Int(&buffer[22], channels); // CHANNELS
+    create32bit_Int(&buffer[24], sampleRate); // SAMPLE RATE
+    create32bit_Int(&buffer[28], sampleRate * channels * (bits / 8)); // BYTE RATE
+    create16bit_Int(&buffer[32], channels * bits / 8); // BLOCK ALIGNMENT
+    create16bit_Int(&buffer[34], bits); // BITS PER SAMPLE
+    create32bit_char(&buffer[36], "data"); // Subchunk 2 ID (DATA)
+    create32bit_Int(&buffer[40], dataSize); // Subchunk 2 Size (DATA SIZE)
+
+    std::cout << "Successfully created the header \n";
+
+    std::ofstream outputWav("audioData.wav", std::ios::binary);
+    std::cout << "Empty wav file created \n";
+    outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
+    std::cout << "Header written on the wav \n";
+    outputWav.write(reinterpret_cast<const char*>(&audioData[0]), dataSize);
+    std::cout << "audioData written on the wav \n";
+    outputWav.close();
+}
 
 void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, float frequency, unsigned bits, waveShape waveShape, float gain){
     const float pi = 3.14159265358979323846;
@@ -115,37 +153,21 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
     }
 }
 
-void wavMaker(int channels, int bits, int sampleRate, const std::vector<unsigned char>& audioData){ // this is creating the WAV header
-    std::vector<unsigned char> buffer(44);
-    uint32_t dataSize = audioData.size();
-    create32bit_char(&buffer[0], "RIFF"); // RIFF HEADER
-    create32bit_Int(&buffer[4], dataSize + 36); // RIFF chunk size = file size - 8
-    create32bit_char(&buffer[8], "WAVE"); // FORMAT
-    create32bit_char(&buffer[12], "fmt "); // Subchunk1 ID
-    create32bit_Int(&buffer[16], 16); // Subchunk 1 Size
-    create16bit_Int(&buffer[20], 1); // Audio format : PCM lossless
-    create16bit_Int(&buffer[22], channels); // CHANNELS
-    create32bit_Int(&buffer[24], sampleRate); // SAMPLE RATE
-    create32bit_Int(&buffer[28], sampleRate * channels * (bits / 8)); // BYTE RATE
-    create16bit_Int(&buffer[32], channels * bits / 8); // BLOCK ALIGNMENT
-    create16bit_Int(&buffer[34], bits); // BITS PER SAMPLE
-    create32bit_char(&buffer[36], "data"); // Subchunk 2 ID (DATA)
-    create32bit_Int(&buffer[40], dataSize); // Subchunk 2 Size (DATA SIZE)
-
-    std::cout << "Successfully created the header \n";
-
-    std::ofstream outputWav("audioData.wav", std::ios::binary);
-    std::cout << "Empty wav file created \n";
-    outputWav.write(reinterpret_cast<const char*>(&buffer[0]), buffer.size());
-    std::cout << "Header written on the wav \n";
-    outputWav.write(reinterpret_cast<const char*>(&audioData[0]), dataSize);
-    std::cout << "audioData written on the wav \n";
-    outputWav.close();
+void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize){
+    int i = 0;
+    int calculatedOctave = oct * 12;
+    for (i=0; i < keyboardSize;i++){
+        keyMap[i] = calculatedOctave + i;
+    }
 }
 
 int main(){
-    int frequency = 440;
-    float gain = 0.8;
+    // START OF VARIABLE DECLARATIONS | START OF VARIABLE DECLARATIONS
+    int frequency = 10000;
+    int keyboardSize = 16;
+
+    float gain = 1;
+
     uint32_t samplerate = 48000;
     uint16_t channels = 1;
     uint16_t bits = 16;
@@ -154,7 +176,14 @@ int main(){
     uint32_t dataSize = frames * channels * (bits / 8);
 
     waveShape main = SAWTOOTH;
-    std::vector<unsigned char> audioData(dataSize);
+    octaveInput octave = OCTAVE_4;
+
+    std::vector<unsigned char> audioData(dataSize); // création du tableau DATASIZE
+    std::vector<int> keyMap(16);
+
+    // END OF VARIABLE DECLARATIONS | END OF VARIABLE DECLARATIONS
+
+    initMapping(keyMap, octave, keyboardSize);
     writeWaveform(samplerate, audioData, frequency, bits, main, gain);
     wavMaker(channels, bits, samplerate, audioData);
 
