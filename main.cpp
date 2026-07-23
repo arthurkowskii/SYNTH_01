@@ -13,14 +13,20 @@ enum waveShape {
 };
 
 enum octaveInput {
-    OCTAVE_1,
-    OCTAVE_2,
-    OCTAVE_3,
-    OCTAVE_4,
-    OCTAVE_5,
-    OCTAVE_6,
-    OCTAVE_7,
-    OCTAVE_8,
+    OCTAVE_1 = 0,
+    OCTAVE_2 = 12,
+    OCTAVE_3 = 24,
+    OCTAVE_4 = 36,
+    OCTAVE_5 = 48,
+    OCTAVE_6 = 60,
+    OCTAVE_7 = 72,
+    OCTAVE_8 = 84,
+};
+
+enum scale {
+    CHROMATIC,
+    MAJOR,
+    MINOR
 };
 
 void create16bit_char(unsigned char* buffer, std::string str){ // little endian 16bits char writing
@@ -153,11 +159,25 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
     }
 }
 
-void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize){
+int noteToFrequency(int note, int octave){
+    int frequency = 440 * pow(2, (note - 69) / 12.0);
+    return frequency * pow(2, octave);
+}
+
+void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize, scale scale){
     int i = 0;
-    int calculatedOctave = oct * 12;
-    for (i=0; i < keyboardSize;i++){
-        keyMap[i] = calculatedOctave + i;
+    switch (scale){
+        case CHROMATIC:
+            for (i=0; i < keyboardSize;i++){
+                keyMap[i] = noteToFrequency(i, oct);
+            }
+            break;
+        case MAJOR:
+            std::cout << "MAJOR SCALE HASNT BEEN DONE YET" << std::endl;
+            break;
+        case MINOR:
+            std::cout << "MINOR SCALE HASNT BEEN DONE YET" << std::endl;
+            break;
     }
 }
 
@@ -178,12 +198,13 @@ int main(){
     waveShape main = SAWTOOTH;
     octaveInput octave = OCTAVE_4;
 
+
     std::vector<unsigned char> audioData(dataSize); // création du tableau DATASIZE
-    std::vector<int> keyMap(16);
+    std::vector<int> keyMap(keyboardSize); // crétion du tableau ou chaque index correspond à une touche du clavier
 
     // END OF VARIABLE DECLARATIONS | END OF VARIABLE DECLARATIONS
 
-    initMapping(keyMap, octave, keyboardSize);
+    initMapping(keyMap, octave, keyMap.size(), CHROMATIC);
     writeWaveform(samplerate, audioData, frequency, bits, main, gain);
     wavMaker(channels, bits, samplerate, audioData);
 
