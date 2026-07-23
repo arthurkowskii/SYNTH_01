@@ -159,9 +159,8 @@ void writeWaveform(uint32_t samplerate, std::vector<unsigned char>& audioData, f
     }
 }
 
-int noteToFrequency(int note, int octave){
-    int frequency = 440 * pow(2, (note - 69) / 12.0);
-    return frequency * pow(2, octave);
+int noteToFrequency(int midiNote){
+    return 440.0f * pow(2.0f, (midiNote - 69) / 12.0f);
 }
 
 void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize, scale scale){
@@ -169,7 +168,7 @@ void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize, sc
     switch (scale){
         case CHROMATIC:
             for (i=0; i < keyboardSize;i++){
-                keyMap[i] = noteToFrequency(i, oct);
+                keyMap[i] = oct * 12 + i;
             }
             break;
         case MAJOR:
@@ -183,8 +182,8 @@ void initMapping(std::vector<int>& keyMap, octaveInput oct, int keyboardSize, sc
 
 int main(){
     // START OF VARIABLE DECLARATIONS | START OF VARIABLE DECLARATIONS
-    int frequency = 10000;
     int keyboardSize = 16;
+    float frequency = noteToFrequency(midiNote, octave);
 
     float gain = 1;
 
@@ -201,8 +200,11 @@ int main(){
 
     std::vector<unsigned char> audioData(dataSize); // création du tableau DATASIZE
     std::vector<int> keyMap(keyboardSize); // crétion du tableau ou chaque index correspond à une touche du clavier
+    int midiNote = keyMap[16];
 
     // END OF VARIABLE DECLARATIONS | END OF VARIABLE DECLARATIONS
+
+
 
     initMapping(keyMap, octave, keyMap.size(), CHROMATIC);
     writeWaveform(samplerate, audioData, frequency, bits, main, gain);
